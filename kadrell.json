@@ -1,0 +1,13 @@
+{
+  "name": "kadrell-example",
+  "version": "1.0.0",
+  "description": "Example extension showing the full Kadrell Lua API: panel, status, session events, timers, exec, http, storage and settings.",
+  "apiVersion": 1,
+  "permissions": ["exec", "http", "sessions"],
+  "settings": [
+    { "key": "title", "type": "string", "label": "Panel title", "default": "Example" },
+    { "key": "greeting", "type": "string", "label": "Greeting", "default": "hello from the example extension" },
+    { "key": "token", "type": "secret", "label": "API token" },
+    { "key": "verbose", "type": "bool", "label": "Verbose logging", "default": false }
+  ]
+}
