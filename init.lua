@@ -6,6 +6,9 @@
 
 local ticks = 0
 local lastFocus = "(none)"
+local hellos = 0
+local sessionCount = 0
+local lastAction = "(none)"
 
 -- Build the right-sidebar panel (section > item with actions, text, buttons).
 -- kadrell.panel.set replaces the whole tree; colors are theme names: accent, muted, ok, warn, err.
@@ -14,9 +17,11 @@ local function render()
     title = kadrell.config.title or "Example",
     children = {
       { type = "section", title = "State", children = {
-        { type = "item", text = "Focused session", detail = lastFocus, color = "accent",
-          actions = { { id = "hello", label = "Say hello" } } },
+        { type = "item", text = "Focused session", detail = lastFocus, color = "accent" },
         { type = "item", text = "Ticks", detail = tostring(ticks), color = "muted" },
+        { type = "item", text = "Hellos", detail = tostring(hellos), color = "ok" },
+        { type = "item", text = "Sessions", detail = tostring(sessionCount), color = "muted" },
+        { type = "item", text = "Last action", detail = lastAction, color = "muted" },
       }},
       { type = "text", text = "Greeting: " .. (kadrell.config.greeting or "hi"), color = "muted" },
       { type = "button", label = "Say hello", action = "hello" },
@@ -24,7 +29,7 @@ local function render()
     },
   }
   -- One entry in the bottom status bar; clicking it fires ui.action with this id.
-  kadrell.status.set{ text = "ex " .. ticks, color = "ok", action = "hello" }
+  kadrell.status.set{ text = "hellos " .. hellos, color = "ok", action = "hello" }
 end
 
 -- React to Kadrell session events.
@@ -42,20 +47,25 @@ kadrell.on("session.status", function(data)
   kadrell.log("status: " .. tostring(data.state))
 end)
 
--- UI actions from panel buttons/items and the status entry.
+-- UI actions from panel buttons/items and the status entry. Each updates the panel so the click is visible.
 kadrell.on("ui.action", function(data)
   if data.id == "hello" then
+    hellos = hellos + 1
+    lastAction = "said hello"
     kadrell.log(kadrell.config.greeting or "hello from the example extension")
   elseif data.id == "sessions" then
     local list = kadrell.sessions()                 -- same as `kadrell ls --json`, as a Lua table
-    kadrell.log("sessions open: " .. tostring(#list))
+    sessionCount = #list
+    lastAction = "listed sessions"
     if list[1] then
       local res = kadrell.run("select", "-t", list[1].key)  -- drive Kadrell like the CLI
       kadrell.log("selected first session, status " .. tostring(res.status))
     end
   else
+    lastAction = "unknown: " .. tostring(data.id)
     kadrell.warn("unknown action: " .. tostring(data.id))
   end
+  render()
 end)
 
 -- app.ready fires once after init; a good place for first-run setup and one-off I/O.
